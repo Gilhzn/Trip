@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/heebo';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Heebo Variable', 'Heebo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-primary-50: #f0fdfa;
+  --color-primary-100: #ccfbf1;
+  --color-primary-200: #99f6e4;
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
+  --color-primary-600: #0d9488;
+  --color-primary-700: #0f766e;
+  --color-primary-800: #115e59;
+  --color-primary-900: #134e4a;
+  --color-primary-950: #042f2e;
+
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-card-hover: 0 8px 24px -6px rgb(13 148 136 / 0.18);
+
+  --animate-fade-in: fade-in 0.35s ease-out both;
+  --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-zinc-50 text-zinc-900 font-sans antialiased dark:bg-zinc-950 dark:text-zinc-100;
+}
+
+/* Hebrew reads better with slightly relaxed line-height */
+p, li {
+  @apply leading-relaxed;
+}
+
+/* Hide scrollbars on horizontal scroll strips while keeping scrollability */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Leaflet must stay LTR internally; container styling */
+.leaflet-container {
+  @apply h-full w-full;
+  font-family: var(--font-sans);
+}
