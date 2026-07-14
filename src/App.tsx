@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -11,10 +12,13 @@ import { ItineraryTab } from '@/pages/trip/ItineraryTab';
 import { FoodTab } from '@/pages/trip/FoodTab';
 import { LodgingTab } from '@/pages/trip/LodgingTab';
 import { AttractionsTab } from '@/pages/trip/AttractionsTab';
-import { MapTab } from '@/pages/trip/MapTab';
 import { PackingTab } from '@/pages/trip/PackingTab';
 import { SafetyTab } from '@/pages/trip/SafetyTab';
 import { DrivingTab } from '@/pages/trip/DrivingTab';
+import { CardSkeleton } from '@/components/ui/Skeleton';
+
+// Leaflet is heavy — load the map chunk only when the map tab opens.
+const MapTab = lazy(() => import('@/pages/trip/MapTab').then((m) => ({ default: m.MapTab })));
 
 const router = createHashRouter([
   {
@@ -31,7 +35,14 @@ const router = createHashRouter([
           { path: 'food', element: <FoodTab /> },
           { path: 'lodging', element: <LodgingTab /> },
           { path: 'attractions', element: <AttractionsTab /> },
-          { path: 'map', element: <MapTab /> },
+          {
+            path: 'map',
+            element: (
+              <Suspense fallback={<CardSkeleton />}>
+                <MapTab />
+              </Suspense>
+            ),
+          },
           { path: 'packing', element: <PackingTab /> },
           { path: 'safety', element: <SafetyTab /> },
           { path: 'driving', element: <DrivingTab /> },
