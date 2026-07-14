@@ -1,5 +1,7 @@
 # Trip — תכנון טיולים חכם ✈️
 
+**Live app: <https://gilhzn.github.io/Trip/>** (auto-deployed from this repo via GitHub Actions on every push)
+
 A weather-adaptive travel-planning web app. Hebrew-first (full RTL) with an English toggle. Pick a destination, dates, who's traveling and where you're from — and get a complete day-by-day plan.
 
 ## Features
