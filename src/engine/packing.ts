@@ -5,7 +5,7 @@ import { buildPartyProfile } from './scoring';
 import { listDates } from '@/services/weatherService';
 
 export function generatePackingList(params: TripParams, weather: WeatherDay[], packingExtras: string[] = []): PackingItem[] {
-  const ages = params.travelers.length > 0 ? params.travelers.map((t) => t.age) : [30, 30];
+  const ages = params.travelers.length > 0 ? params.travelers.map((t) => t.age) : [30];
   const party = buildPartyProfile(ages);
   const nights = Math.max(listDates(params.startDate, params.endDate).length - 1, 1);
 

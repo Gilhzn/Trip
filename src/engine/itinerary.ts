@@ -76,7 +76,7 @@ export function generateItinerary(input: GenerateInput): DayPlan[] {
   const { params, pois, weather, kosherOnly, localTips = [] } = input;
   const dates = listDates(params.startDate, params.endDate);
   const party: PartyProfile = buildPartyProfile(
-    params.travelers.length > 0 ? params.travelers.map((t) => t.age) : [30, 30],
+    params.travelers.length > 0 ? params.travelers.map((t) => t.age) : [30],
   );
 
   const attractions = pois.filter((p) => p.category === 'attraction');

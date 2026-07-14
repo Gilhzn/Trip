@@ -16,7 +16,7 @@ export interface Settings {
 
 const DEFAULTS: Settings = {
   currency: 'EUR',
-  theme: 'system',
+  theme: 'light',
   kosherOnly: false,
   originCountry: 'IL',
 };

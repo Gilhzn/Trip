@@ -2,8 +2,11 @@ import type { Bilingual } from './poi';
 import type { DayPart, WeatherDay } from './weather';
 import type { OriginCountry } from '@/state/SettingsContext';
 
+export type TravelerGender = 'male' | 'female';
+
 export interface Traveler {
   age: number;
+  gender?: TravelerGender;
 }
 
 export interface TripParams {

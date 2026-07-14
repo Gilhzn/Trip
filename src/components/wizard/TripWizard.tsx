@@ -11,9 +11,12 @@ import { Card } from '@/components/ui/Card';
 import { DestinationSearch, metaToChoice, type DestinationChoice } from './DestinationSearch';
 import { DESTINATIONS } from '@/data/destinations';
 import { useLocalized } from '@/i18n/I18nContext';
+import type { Traveler, TravelerGender } from '@/types/trip';
 
 const MAX_TRIP_DAYS = 21;
+const MAX_TRAVELERS = 10;
 const ORIGIN_OPTIONS: OriginCountry[] = ['IL', 'US', 'UK', 'other'];
+const GENDER_OPTIONS: TravelerGender[] = ['male', 'female'];
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -35,7 +38,7 @@ export function TripWizard() {
   const [destination, setDestination] = useState<DestinationChoice | undefined>();
   const [startDate, setStartDate] = useState(() => plusDays(todayIso(), 7));
   const [endDate, setEndDate] = useState(() => plusDays(todayIso(), 12));
-  const [ages, setAges] = useState<number[]>([30, 30]);
+  const [travelers, setTravelers] = useState<Traveler[]>([{ age: 30 }]);
   const [origin, setOrigin] = useState<OriginCountry>(settings.originCountry);
   const [stage, setStage] = useState<GenerationStage | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +49,12 @@ export function TripWizard() {
   const canGenerate = Boolean(destination) && !dateInvalid && !tooLong && !stage;
 
   const setAge = (index: number, age: number) => {
-    setAges((prev) => prev.map((a, i) => (i === index ? Math.max(0, Math.min(99, age)) : a)));
+    setTravelers((prev) => prev.map((t, i) => (i === index ? { ...t, age: Math.max(0, Math.min(99, age)) } : t)));
+  };
+  const setGender = (index: number, gender: TravelerGender) => {
+    setTravelers((prev) =>
+      prev.map((t, i) => (i === index ? { ...t, gender: t.gender === gender ? undefined : gender } : t)),
+    );
   };
 
   const generate = async () => {
@@ -65,7 +73,7 @@ export function TripWizard() {
           timezone: destination.timezone,
           startDate,
           endDate,
-          travelers: ages.map((age) => ({ age })),
+          travelers,
           originCountry: origin,
         },
         settings.kosherOnly,
@@ -169,24 +177,49 @@ export function TripWizard() {
             <Users className="size-4 text-primary-600" />
             {t('wizard.party.label')}
           </label>
-          <div className="flex flex-wrap items-center gap-2">
-            {ages.map((age, i) => (
-              <div key={i} className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900">
-                <span className="ps-2 text-xs text-zinc-500">{t('wizard.party.age')}</span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  max={99}
-                  value={age}
-                  onChange={(e) => setAge(i, Number(e.target.value))}
-                  className="h-9 w-13 rounded-lg bg-transparent text-center text-sm font-semibold outline-none"
-                  aria-label={`${t('wizard.party.age')} ${i + 1}`}
-                />
-                {ages.length > 1 && (
+          <div className="flex flex-col gap-2">
+            {travelers.map((traveler, i) => (
+              <div
+                key={i}
+                className="flex flex-wrap items-center gap-3 rounded-xl border border-zinc-200 bg-white p-2.5 dark:border-zinc-700 dark:bg-zinc-900"
+              >
+                <span className="ps-1 text-xs font-medium text-zinc-500">{t('wizard.party.traveler', { n: i + 1 })}</span>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-zinc-500">{t('wizard.party.age')}</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={99}
+                    value={traveler.age}
+                    onChange={(e) => setAge(i, Number(e.target.value))}
+                    className="h-9 w-13 rounded-lg border border-zinc-200 bg-transparent text-center text-sm font-semibold outline-none dark:border-zinc-700"
+                    aria-label={`${t('wizard.party.age')} ${i + 1}`}
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  {GENDER_OPTIONS.map((gender) => (
+                    <button
+                      key={gender}
+                      onClick={() => setGender(i, gender)}
+                      aria-pressed={traveler.gender === gender}
+                      className={`h-9 rounded-lg border px-3 text-sm font-medium transition-colors ${
+                        traveler.gender === gender
+                          ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300'
+                          : 'border-zinc-200 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400'
+                      }`}
+                    >
+                      {t(`wizard.party.gender.${gender}`)}
+                    </button>
+                  ))}
+                </div>
+
+                {travelers.length > 1 && (
                   <button
-                    onClick={() => setAges((prev) => prev.filter((_, j) => j !== i))}
-                    className="grid size-8 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-red-500 dark:hover:bg-zinc-800"
+                    onClick={() => setTravelers((prev) => prev.filter((_, j) => j !== i))}
+                    className="ms-auto grid size-8 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-red-500 dark:hover:bg-zinc-800"
                     aria-label={t('common.delete')}
                   >
                     <Minus className="size-4" />
@@ -194,10 +227,10 @@ export function TripWizard() {
                 )}
               </div>
             ))}
-            {ages.length < 10 && (
+            {travelers.length < MAX_TRAVELERS && (
               <button
-                onClick={() => setAges((prev) => [...prev, 8])}
-                className="inline-flex h-11 items-center gap-1 rounded-xl border border-dashed border-zinc-300 px-3 text-sm font-medium text-zinc-500 hover:border-primary-400 hover:text-primary-600 dark:border-zinc-600"
+                onClick={() => setTravelers((prev) => [...prev, { age: 30 }])}
+                className="inline-flex h-11 items-center gap-1 self-start rounded-xl border border-dashed border-zinc-300 px-3 text-sm font-medium text-zinc-500 hover:border-primary-400 hover:text-primary-600 dark:border-zinc-600"
               >
                 <Plus className="size-4" />
                 {t('wizard.party.addTraveler')}
