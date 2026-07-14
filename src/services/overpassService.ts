@@ -18,7 +18,7 @@ interface OverpassResponse {
   elements: OverpassElement[];
 }
 
-async function runQuery(query: string): Promise<OverpassElement[]> {
+export async function runOverpassQuery(query: string): Promise<OverpassElement[]> {
   let lastError: unknown;
   for (const endpoint of ENDPOINTS) {
     try {
@@ -40,7 +40,7 @@ async function runQuery(query: string): Promise<OverpassElement[]> {
   throw lastError instanceof Error ? lastError : new Error('Overpass unavailable');
 }
 
-function toPoi(el: OverpassElement, category: Poi['category']): Poi | null {
+export function overpassElementToPoi(el: OverpassElement, category: Poi['category']): Poi | null {
   const lat = el.lat ?? el.center?.lat;
   const lon = el.lon ?? el.center?.lon;
   const name = el.tags?.name;
@@ -85,7 +85,7 @@ function toPoi(el: OverpassElement, category: Poi['category']): Poi | null {
   };
 }
 
-function dedupe(pois: Poi[]): Poi[] {
+export function dedupePois(pois: Poi[]): Poi[] {
   const seen = new Set<string>();
   return pois.filter((p) => {
     const key = `${p.category}:${p.name.en.toLowerCase()}`;
@@ -125,12 +125,12 @@ export async function fetchOverpassPois(lat: number, lon: number): Promise<Poi[]
     const pois: Poi[] = [];
     for (const { category, q } of queries) {
       try {
-        const elements = await runQuery(q);
-        pois.push(...elements.map((el) => toPoi(el, category)).filter((p): p is Poi => p !== null));
+        const elements = await runOverpassQuery(q);
+        pois.push(...elements.map((el) => overpassElementToPoi(el, category)).filter((p): p is Poi => p !== null));
       } catch {
         // Partial data beats no data; the UI flags overpass mode as limited.
       }
     }
-    return dedupe(pois).slice(0, 150);
+    return dedupePois(pois).slice(0, 150);
   });
 }

@@ -5,6 +5,7 @@ import {
   Briefcase,
   CalendarDays,
   Car,
+  Compass,
   Home,
   Landmark,
   Luggage,
@@ -69,6 +70,7 @@ export function BottomNav() {
 
   const moreItems: NavItem[] = tripId
     ? [
+        { to: `/trip/${tripId}/explore`, labelKey: 'nav.explore', icon: Compass },
         { to: `/trip/${tripId}/attractions`, labelKey: 'nav.attractions', icon: Landmark },
         { to: `/trip/${tripId}/lodging`, labelKey: 'nav.lodging', icon: Bed },
         { to: `/trip/${tripId}/safety`, labelKey: 'nav.safety', icon: ShieldCheck },

@@ -15,6 +15,7 @@ import { AttractionsTab } from '@/pages/trip/AttractionsTab';
 import { PackingTab } from '@/pages/trip/PackingTab';
 import { SafetyTab } from '@/pages/trip/SafetyTab';
 import { DrivingTab } from '@/pages/trip/DrivingTab';
+import { ExploreTab } from '@/pages/trip/ExploreTab';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 
 // Leaflet is heavy — load the map chunk only when the map tab opens.
@@ -43,6 +44,7 @@ const router = createHashRouter([
               </Suspense>
             ),
           },
+          { path: 'explore', element: <ExploreTab /> },
           { path: 'packing', element: <PackingTab /> },
           { path: 'safety', element: <SafetyTab /> },
           { path: 'driving', element: <DrivingTab /> },

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ChevronDown, ExternalLink, Navigation } from 'lucide-react';
+import { Car, ChevronDown, ExternalLink, Navigation } from 'lucide-react';
 import type { Poi } from '@/types/poi';
-import { useI18n, useLocalized } from '@/i18n/I18nContext';
+import { useI18n, useLocalized, Ltr } from '@/i18n/I18nContext';
 import { wazeUrl, googleMapsUrl } from '@/services/navigation';
+import { formatDriveTime, formatKm } from '@/lib/travel';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { Rating } from '@/components/ui/Rating';
@@ -11,8 +12,13 @@ import { Price } from '@/components/money/Price';
 
 const KOSHER_TONE = { yes: 'green', only: 'green', no: 'red', unknown: 'neutral' } as const;
 
-export function PoiCard({ poi, compact = false }: { poi: Poi; compact?: boolean }) {
-  const { t } = useI18n();
+export interface TravelInfo {
+  km: number;
+  minutes: number;
+}
+
+export function PoiCard({ poi, compact = false, travel }: { poi: Poi; compact?: boolean; travel?: TravelInfo }) {
+  const { t, lang } = useI18n();
   const localized = useLocalized();
   const [expanded, setExpanded] = useState(false);
   const hasDetails = Boolean(poi.description);
@@ -34,6 +40,17 @@ export function PoiCard({ poi, compact = false }: { poi: Poi; compact?: boolean 
               <ChevronDown className={`mt-1 size-4 shrink-0 text-zinc-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
             )}
           </div>
+
+          {travel && (
+            <div className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-950 dark:text-primary-300">
+              <Car className="size-3.5" />
+              <span>
+                ~<Ltr>{formatDriveTime(travel.minutes, lang)}</Ltr>
+                {' · '}
+                <Ltr>{formatKm(travel.km, lang)}</Ltr>
+              </span>
+            </div>
+          )}
 
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
             <Rating value={poi.rating} />
