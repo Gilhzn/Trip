@@ -56,4 +56,10 @@ export interface TripPlan {
   packingList: PackingItem[];
   generatedAt: string;
   dataMode: 'pack' | 'overpass';
+  /**
+   * Overpass-sourced trips embed their POIs so saved trips stay resolvable
+   * after the live cache expires. Pack trips resolve POIs from the bundled
+   * pack instead (kept out of localStorage to save quota).
+   */
+  pois?: import('./poi').Poi[];
 }
