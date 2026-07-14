@@ -45,6 +45,9 @@ jobs:
           path: dist
 
   deploy:
+    # The github-pages environment only allows deployments from main;
+    # other branches still get the build+test job as CI.
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     needs: build
     runs-on: ubuntu-latest
     environment:
