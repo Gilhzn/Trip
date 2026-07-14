@@ -413,7 +413,7 @@ export const rome: DestinationPack = {
       category: 'restaurant',
       name: { he: 'דה אנצו אל 29', en: 'Da Enzo al 29' },
       description: {
-        he: 'טרטוריה זעirah ואותנטית בטרסטוורה — קלאסיקות רומאיות מושלמות ותור שמתחיל להצטבר עוד לפני הפתיחה. אין הזמנות מראש לרוב השעות; בואו מוקדם. לא כשר.',
+        he: 'טרטוריה זעירה ואותנטית בטרסטוורה — קלאסיקות רומאיות מושלמות ותור שמתחיל להצטבר עוד לפני הפתיחה. אין הזמנות מראש לרוב השעות; בואו מוקדם. לא כשר.',
         en: 'A tiny, authentic Trastevere trattoria — perfect Roman classics and a queue that forms before opening. Reservations are limited; come early. Not kosher.',
       },
       lat: 41.8878,

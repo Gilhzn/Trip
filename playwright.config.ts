@@ -5,6 +5,9 @@ export default defineConfig({
   timeout: 120_000,
   use: {
     baseURL: 'http://localhost:4173',
+    // Use the system Chromium when present (e.g. preinstalled CI images)
+    // instead of downloading a browser.
+    ...(process.env.CHROMIUM_PATH ? { launchOptions: { executablePath: process.env.CHROMIUM_PATH } } : {}),
   },
   webServer: {
     command: 'npm run preview -- --port 4173',
