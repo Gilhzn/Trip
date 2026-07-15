@@ -131,6 +131,8 @@ export const he = {
   'itinerary.freeDayNote': 'יום חופשי — רעיונות לטיולי יום באזור',
   'itinerary.emptyDay': 'יום פתוח לחקירה עצמאית',
   'itinerary.visitDuration': 'כ־{n} דק׳ ביקור',
+  'itinerary.nearby.title': 'מקומות וטיולי יום מסביב',
+  'itinerary.nearby.subtitle': 'מסעדות, אטרקציות ואתרים עד מרחק נסיעה שתבחרו (עד 150 ק״מ) — עם זמן הנסיעה מהיעד',
 
   // Weather
   'weather.title': 'מזג אוויר',

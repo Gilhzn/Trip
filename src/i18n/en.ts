@@ -133,6 +133,8 @@ export const en: Record<TranslationKey, string> = {
   'itinerary.freeDayNote': 'Free day — day-trip ideas nearby',
   'itinerary.emptyDay': 'Open day for exploring on your own',
   'itinerary.visitDuration': '~{n} min visit',
+  'itinerary.nearby.title': 'Nearby places & day trips',
+  'itinerary.nearby.subtitle': 'Restaurants, attractions and sights within a travel range you choose (up to 150 km) — with drive time from your destination',
 
   // Weather
   'weather.title': 'Weather',
