@@ -131,8 +131,6 @@ export const he = {
   'itinerary.freeDayNote': 'יום חופשי — רעיונות לטיולי יום באזור',
   'itinerary.emptyDay': 'יום פתוח לחקירה עצמאית',
   'itinerary.visitDuration': 'כ־{n} דק׳ ביקור',
-  'itinerary.nearby.title': 'מקומות וטיולי יום מסביב',
-  'itinerary.nearby.subtitle': 'מסעדות, אטרקציות ואתרים עד מרחק נסיעה שתבחרו (עד 150 ק״מ) — עם זמן הנסיעה מהיעד',
 
   // Weather
   'weather.title': 'מזג אוויר',
@@ -253,7 +251,7 @@ export const he = {
   'explore.search': 'הצגת תוצאות',
   'explore.searchAgain': 'עדכון תוצאות',
   'explore.resultsCount': '{n} תוצאות',
-  'explore.capNote': 'לצמצום עומס: מסעדות ולינה מוצגות עד ~60 ק״מ, ואטרקציות ואתרים עד ~160 ק״מ מהמרכז',
+  'explore.capNote': 'הצגת אטרקציות ואתרים בולטים עד ~150 ק״מ; מסעדות עד ~25 ק״מ ולינה עד ~40 ק״מ מהמרכז',
   'explore.empty.title': 'לא נמצאו תוצאות',
   'explore.empty.desc': 'נסו להגדיל את זמן הנסיעה או לבחור קטגוריות נוספות',
   'explore.error': 'לא הצלחנו לטעון תוצאות כרגע — שירות המפות עמוס. נסו שוב עוד רגע',

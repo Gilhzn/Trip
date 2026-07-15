@@ -133,8 +133,6 @@ export const en: Record<TranslationKey, string> = {
   'itinerary.freeDayNote': 'Free day — day-trip ideas nearby',
   'itinerary.emptyDay': 'Open day for exploring on your own',
   'itinerary.visitDuration': '~{n} min visit',
-  'itinerary.nearby.title': 'Nearby places & day trips',
-  'itinerary.nearby.subtitle': 'Restaurants, attractions and sights within a travel range you choose (up to 150 km) — with drive time from your destination',
 
   // Weather
   'weather.title': 'Weather',
@@ -255,7 +253,7 @@ export const en: Record<TranslationKey, string> = {
   'explore.search': 'Show results',
   'explore.searchAgain': 'Update results',
   'explore.resultsCount': '{n} results',
-  'explore.capNote': 'To keep things fast: restaurants & stays are shown up to ~60 km, attractions & sights up to ~160 km from the center',
+  'explore.capNote': 'Notable attractions & sights shown up to ~150 km; restaurants up to ~25 km and stays up to ~40 km from the center',
   'explore.empty.title': 'No results found',
   'explore.empty.desc': 'Try increasing the drive time or selecting more categories',
   'explore.error': "We couldn't load results right now — the map service is busy. Try again in a moment",

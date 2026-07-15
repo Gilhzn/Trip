@@ -7,20 +7,21 @@ export type ExploreCategory = Extract<PoiCategory, 'attraction' | 'restaurant' |
 export const EXPLORE_CATEGORIES: ExploreCategory[] = ['attraction', 'restaurant', 'hotel', 'parking'];
 
 /**
- * Per-category caps on the query radius (km). Attractions/sites are sparse, so
- * we search wide; restaurants/hotels are dense, so we keep them nearer to stay
- * within Overpass's limits. The UI surfaces these caps to the user.
+ * Per-category caps on the query radius (km). Attractions/sights are restricted
+ * to notable (Wikidata-tagged) places, which keeps them light enough to search
+ * wide; the dense categories (food/stays/parking) stay nearer so the public
+ * Overpass API can answer quickly. The UI surfaces these caps to the user.
  */
 export const CATEGORY_MAX_KM: Record<ExploreCategory, number> = {
-  attraction: 160,
-  restaurant: 60,
-  hotel: 70,
-  parking: 30,
+  attraction: 150,
+  restaurant: 25,
+  hotel: 40,
+  parking: 15,
 };
 
 const CATEGORY_LIMIT: Record<ExploreCategory, number> = {
-  attraction: 90,
-  restaurant: 70,
+  attraction: 120,
+  restaurant: 60,
   hotel: 50,
   parking: 25,
 };
@@ -28,22 +29,24 @@ const CATEGORY_LIMIT: Record<ExploreCategory, number> = {
 function queryFor(category: ExploreCategory, lat: number, lon: number, radiusM: number): string {
   const around = `(around:${radiusM},${lat},${lon})`;
   const limit = CATEGORY_LIMIT[category];
-  switch (category) {
+  switch (category)  {
     case 'attraction':
+      // Require a Wikidata tag → notable, day-trip-worthy sights, and small
+      // enough a result set that the query stays fast even over ~150 km.
       return (
-        `[out:json][timeout:90];(` +
-        `nwr[tourism~"^(attraction|museum|gallery|viewpoint|zoo|theme_park|aquarium|artwork)$"][name]${around};` +
-        `nwr[historic~"^(castle|monument|fort|palace|ruins|archaeological_site)$"][name]${around};` +
-        `nwr[natural~"^(peak|waterfall|beach|cave_entrance|hot_spring)$"][name]${around};` +
+        `[out:json][timeout:50];(` +
+        `nwr[tourism~"^(attraction|museum|gallery|viewpoint|zoo|theme_park|aquarium|artwork)$"][name][wikidata]${around};` +
+        `nwr[historic~"^(castle|monument|fort|palace|ruins|archaeological_site|memorial)$"][name][wikidata]${around};` +
+        `nwr[natural~"^(peak|waterfall|volcano|cave_entrance|glacier)$"][name][wikidata]${around};` +
         `nwr[leisure~"^(park|nature_reserve|water_park)$"][name][wikidata]${around};` +
         `);out center ${limit};`
       );
     case 'restaurant':
-      return `[out:json][timeout:60];nwr[amenity~"^(restaurant|cafe)$"][name]${around};out center ${limit};`;
+      return `[out:json][timeout:40];nwr[amenity~"^(restaurant|cafe)$"][name]${around};out center ${limit};`;
     case 'hotel':
-      return `[out:json][timeout:60];nwr[tourism~"^(hotel|guest_house|apartment|hostel|chalet)$"][name]${around};out center ${limit};`;
+      return `[out:json][timeout:40];nwr[tourism~"^(hotel|guest_house|apartment|hostel|chalet)$"][name]${around};out center ${limit};`;
     case 'parking':
-      return `[out:json][timeout:60];nwr[amenity=parking][access!=private][name]${around};out center ${limit};`;
+      return `[out:json][timeout:40];nwr[amenity=parking][access!=private][name]${around};out center ${limit};`;
   }
 }
 
