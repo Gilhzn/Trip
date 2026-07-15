@@ -76,13 +76,30 @@ describe('generateItinerary', () => {
     expect(fairDay.items[0].dayPart).toBe('morning');
   });
 
-  it('never repeats attractions or restaurants across the trip', () => {
+  it('never repeats attractions, keeps meals distinct per day, and only reuses restaurants once all are used', () => {
     const weather = [weatherDay('2026-07-15'), weatherDay('2026-07-16'), weatherDay('2026-07-17'), weatherDay('2026-07-18')];
     const days = generateItinerary({ params: PARAMS, pois: POIS, weather, kosherOnly: false });
+
+    // Attractions are never repeated across the trip.
     const attractionIds = days.flatMap((d) => d.items.map((i) => i.poiId));
     expect(new Set(attractionIds).size).toBe(attractionIds.length);
-    const mealIds = days.flatMap((d) => [d.lunchPoiId, d.dinnerPoiId]).filter(Boolean);
-    expect(new Set(mealIds).size).toBe(mealIds.length);
+
+    // No restaurant appears twice on the same day.
+    for (const day of days) {
+      const dayMeals = [day.breakfastPoiId, day.lunchPoiId, day.dinnerPoiId].filter(Boolean);
+      expect(new Set(dayMeals).size).toBe(dayMeals.length);
+    }
+
+    // A restaurant is only reused after every restaurant has been used once.
+    const totalRestaurants = POIS.filter((p) => p.category === 'restaurant').length;
+    const seen = new Set<string>();
+    for (const day of days) {
+      for (const mealId of [day.breakfastPoiId, day.lunchPoiId, day.dinnerPoiId]) {
+        if (!mealId) continue;
+        if (seen.has(mealId)) expect(seen.size).toBe(totalRestaurants);
+        seen.add(mealId);
+      }
+    }
   });
 
   it('honors kosher-only meals', () => {
@@ -93,16 +110,13 @@ describe('generateItinerary', () => {
       weather,
       kosherOnly: true,
     });
-    for (const day of days) {
-      for (const mealId of [day.lunchPoiId, day.dinnerPoiId]) {
-        if (!mealId) continue;
-        const meal = POIS.find((p) => p.id === mealId)!;
-        expect(['yes', 'only']).toContain(meal.kosher);
-      }
+    const assigned = days.flatMap((d) => [d.breakfastPoiId, d.lunchPoiId, d.dinnerPoiId]).filter(Boolean);
+    for (const mealId of assigned) {
+      const meal = POIS.find((p) => p.id === mealId)!;
+      expect(['yes', 'only']).toContain(meal.kosher);
     }
-    // Only one kosher restaurant exists → at most one meal gets assigned
-    const assigned = days.flatMap((d) => [d.lunchPoiId, d.dinnerPoiId]).filter(Boolean);
-    expect(assigned).toHaveLength(1);
+    // At least one kosher meal is scheduled, and none on the same day repeat.
+    expect(assigned.length).toBeGreaterThan(0);
   });
 
   it('slows the pace for toddlers and marks arrival/departure days light', () => {
@@ -115,8 +129,11 @@ describe('generateItinerary', () => {
     });
     expect(days[0].noteKey).toBe('itinerary.arrivalNote');
     expect(days[2].noteKey).toBe('itinerary.departureNote');
+    // Light arrival/departure days stay short; the toddler pace caps full days at 3.
+    expect(days[0].items.length).toBeLessThanOrEqual(2);
+    expect(days[2].items.length).toBeLessThanOrEqual(2);
     for (const day of days) {
-      expect(day.items.length).toBeLessThanOrEqual(2);
+      expect(day.items.length).toBeLessThanOrEqual(3);
     }
   });
 

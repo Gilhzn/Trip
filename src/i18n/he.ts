@@ -115,6 +115,7 @@ export const he = {
   'itinerary.noon': 'צהריים',
   'itinerary.evening': 'ערב',
   'itinerary.night': 'לילה',
+  'itinerary.breakfast': 'ארוחת בוקר',
   'itinerary.lunch': 'ארוחת צהריים',
   'itinerary.dinner': 'ארוחת ערב',
   'itinerary.reason.weather-indoor': 'מותאם ליום גשום',

@@ -7,11 +7,12 @@ import { buildPartyProfile, isOpenOn, scorePoi, type PartyProfile } from './scor
 import { centroid, haversineMeters, proximityBonus } from './clustering';
 import { listDates } from '@/services/weatherService';
 
-const MAX_DAY_VISIT_MINUTES = 360;
-const LIGHT_DAY_VISIT_MINUTES = 200;
+const MAX_DAY_VISIT_MINUTES = 480;
+const LIGHT_DAY_VISIT_MINUTES = 220;
 const DEFAULT_VISIT_MINUTES = 90;
 const NEARBY_RADIUS_M = 1500;
 const KOSHER_NEARBY_RADIUS_M = 3000;
+const EMPTY_SET: ReadonlySet<string> = new Set();
 
 interface GenerateInput {
   params: TripParams;
@@ -26,8 +27,10 @@ function weekdayOf(date: string): number {
   return new Date(date + 'T12:00:00Z').getUTCDay();
 }
 
+const SLOT_ORDER: ScheduledItem['dayPart'][] = ['morning', 'noon', 'evening', 'night'];
+
 function pickSlot(index: number): ScheduledItem['dayPart'] {
-  return index === 0 ? 'morning' : index === 1 ? 'noon' : 'evening';
+  return SLOT_ORDER[Math.min(index, SLOT_ORDER.length - 1)];
 }
 
 function reasonFor(poi: Poi, weatherClass: ReturnType<typeof classifyDay>, isAnchor: boolean, nearAnchor: boolean): ScheduleReason {
@@ -39,31 +42,55 @@ function reasonFor(poi: Poi, weatherClass: ReturnType<typeof classifyDay>, isAnc
   return 'top-pick';
 }
 
+const BREAKFAST_CUISINE = /cafe|café|coffee|bakery|breakfast|brunch|patisserie|konditorei/i;
+
+function isBreakfasty(r: Poi): boolean {
+  return (r.cuisine ?? []).some((c) => BREAKFAST_CUISINE.test(c)) || (r.priceLevel ?? 4) <= 2;
+}
+
+interface MealOptions {
+  breakfast?: boolean;
+  /** places already chosen for this same day, never re-used within it */
+  excludeToday?: ReadonlySet<string>;
+}
+
+/**
+ * Pick a restaurant for a meal. Prefers unused places near the day's center;
+ * once the fresh pool runs out it gracefully re-uses a great spot (never twice
+ * on the same day) so every day still gets a full set of meals. Breakfast
+ * favors cafés/bakeries.
+ */
 function pickMeal(
   restaurants: Poi[],
   used: Set<string>,
   center: { lat: number; lon: number } | null,
   kosherOnly: boolean,
   weekday: number,
+  opts: MealOptions = {},
 ): Poi | undefined {
-  let pool = restaurants.filter((r) => !used.has(r.id) && isOpenOn(r, weekday));
-  if (kosherOnly) {
-    pool = pool.filter((r) => r.kosher === 'yes' || r.kosher === 'only');
-  }
+  const excludeToday = opts.excludeToday ?? EMPTY_SET;
+  const eligible = (r: Poi) =>
+    isOpenOn(r, weekday) &&
+    !excludeToday.has(r.id) &&
+    (!kosherOnly || r.kosher === 'yes' || r.kosher === 'only');
+
+  let pool = restaurants.filter((r) => !used.has(r.id) && eligible(r));
+  // Fresh pool exhausted → allow re-using a place from earlier in the trip.
+  if (pool.length === 0) pool = restaurants.filter(eligible);
   if (pool.length === 0) return undefined;
-  if (!center) {
-    return [...pool].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0];
-  }
+
   const radius = kosherOnly ? KOSHER_NEARBY_RADIUS_M : NEARBY_RADIUS_M;
   const scored = pool
     .map((r) => {
-      const dist = haversineMeters(r.lat, r.lon, center.lat, center.lon);
-      const quality = ((r.rating ?? 3.5) / 5) * 0.6 + ((r.popularity ?? 50) / 100) * 0.4;
-      // Nearby quality places win; beyond the radius distance dominates.
-      const score = dist <= radius ? quality + proximityBonus(dist, radius) * 0.5 : quality - dist / 10000;
+      let score = ((r.rating ?? 3.5) / 5) * 0.6 + ((r.popularity ?? 50) / 100) * 0.4;
+      if (center) {
+        const dist = haversineMeters(r.lat, r.lon, center.lat, center.lon);
+        score = dist <= radius ? score + proximityBonus(dist, radius) * 0.5 : score - dist / 10000;
+      }
+      if (opts.breakfast && isBreakfasty(r)) score += 0.4;
       return { r, score };
     })
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.score - a.score || a.r.id.localeCompare(b.r.id));
   return scored[0]?.r;
 }
 
@@ -109,6 +136,7 @@ export function generateItinerary(input: GenerateInput): DayPlan[] {
 
     const slotBudget = lightDay ? Math.min(2, party.slotBudget) : party.slotBudget;
     const minuteBudget = lightDay ? LIGHT_DAY_VISIT_MINUTES : MAX_DAY_VISIT_MINUTES;
+    const fullDay = !lightDay;
 
     const candidates = attractions.filter((p) => !usedAttractions.has(p.id) && isOpenOn(p, weekday));
 
@@ -175,12 +203,23 @@ export function generateItinerary(input: GenerateInput): DayPlan[] {
       });
     });
 
-    // Meals near the day's geographic center.
+    // Meals near the day's geographic center. Full days get breakfast too.
     const dayCenter = centroid(chosen) ?? { lat: params.lat, lon: params.lon };
-    const lunch = pickMeal(restaurants, usedRestaurants, dayCenter, kosherOnly, weekday);
-    if (lunch) usedRestaurants.add(lunch.id);
-    const dinner = pickMeal(restaurants, usedRestaurants, dayCenter, kosherOnly, weekday);
-    if (dinner) usedRestaurants.add(dinner.id);
+    const dayUsed = new Set<string>();
+    const pickDayMeal = (mealOpts: MealOptions) => {
+      const meal = pickMeal(restaurants, usedRestaurants, dayCenter, kosherOnly, weekday, {
+        ...mealOpts,
+        excludeToday: dayUsed,
+      });
+      if (meal) {
+        usedRestaurants.add(meal.id);
+        dayUsed.add(meal.id);
+      }
+      return meal;
+    };
+    const breakfast = fullDay ? pickDayMeal({ breakfast: true }) : undefined;
+    const lunch = pickDayMeal({});
+    const dinner = pickDayMeal({});
 
     // Contextual note (priority: arrival/departure > weather > pacing).
     let noteKey: string | undefined;
@@ -189,7 +228,7 @@ export function generateItinerary(input: GenerateInput): DayPlan[] {
     else if (weatherClass === 'rainy') noteKey = 'itinerary.rainyDayNote';
     else if (weatherClass === 'hot') noteKey = 'itinerary.hotDayNote';
     else if (weatherClass === 'cold') noteKey = 'itinerary.coldDayNote';
-    else if (party.slotBudget === 2) noteKey = 'itinerary.relaxedPaceNote';
+    else if (party.hasToddlers || party.hasSeniors) noteKey = 'itinerary.relaxedPaceNote';
 
     // Attraction pool exhausted → free day enriched with a rotating local tip.
     let tip: Bilingual | undefined;
@@ -205,6 +244,7 @@ export function generateItinerary(input: GenerateInput): DayPlan[] {
       date,
       weather: weatherDay,
       items,
+      breakfastPoiId: breakfast?.id,
       lunchPoiId: lunch?.id,
       dinnerPoiId: dinner?.id,
       noteKey,

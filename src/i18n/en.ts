@@ -117,6 +117,7 @@ export const en: Record<TranslationKey, string> = {
   'itinerary.noon': 'Afternoon',
   'itinerary.evening': 'Evening',
   'itinerary.night': 'Night',
+  'itinerary.breakfast': 'Breakfast',
   'itinerary.lunch': 'Lunch',
   'itinerary.dinner': 'Dinner',
   'itinerary.reason.weather-indoor': 'Great for a rainy day',

@@ -1,4 +1,4 @@
-import { Lightbulb, Moon, Sun, Sunrise, Sunset, UtensilsCrossed } from 'lucide-react';
+import { Coffee, Lightbulb, Moon, Sun, Sunrise, Sunset, UtensilsCrossed } from 'lucide-react';
 import type { DayPlan, ScheduledItem } from '@/types/trip';
 import type { Poi } from '@/types/poi';
 import type { TranslationKey } from '@/i18n/he';
@@ -36,7 +36,10 @@ export function DayTimeline({ day, poiById }: { day: DayPlan; poiById: Map<strin
   const morningItems = day.items.filter((i) => i.dayPart === 'morning');
   const noonItems = day.items.filter((i) => i.dayPart === 'noon');
   const eveningItems = day.items.filter((i) => i.dayPart === 'evening');
+  const nightItems = day.items.filter((i) => i.dayPart === 'night');
 
+  const breakfast = day.breakfastPoiId ? poiById.get(day.breakfastPoiId) : undefined;
+  if (breakfast) entries.push({ slotKey: 'itinerary.breakfast', icon: Coffee, poi: breakfast, isMeal: true });
   morningItems.forEach(pushItem);
   const lunch = day.lunchPoiId ? poiById.get(day.lunchPoiId) : undefined;
   if (lunch) entries.push({ slotKey: 'itinerary.lunch', icon: UtensilsCrossed, poi: lunch, isMeal: true });
@@ -44,6 +47,7 @@ export function DayTimeline({ day, poiById }: { day: DayPlan; poiById: Map<strin
   eveningItems.forEach(pushItem);
   const dinner = day.dinnerPoiId ? poiById.get(day.dinnerPoiId) : undefined;
   if (dinner) entries.push({ slotKey: 'itinerary.dinner', icon: Moon, poi: dinner, isMeal: true });
+  nightItems.forEach(pushItem);
 
   return (
     <div className="space-y-4">

@@ -36,6 +36,7 @@ export interface DayPlan {
   date: string;
   weather: WeatherDay;
   items: ScheduledItem[];
+  breakfastPoiId?: string;
   lunchPoiId?: string;
   dinnerPoiId?: string;
   /** i18n key of a contextual note (e.g. rainy-day notice) */
