@@ -73,6 +73,9 @@ export function PoiCard({ poi, compact = false, travel }: { poi: Poi; compact?: 
               {poi.kosher && poi.kosher !== 'unknown' && (
                 <Chip tone={KOSHER_TONE[poi.kosher]}>{t(`food.kosher.${poi.kosher}`)}</Chip>
               )}
+              {(poi.glutenFree === 'yes' || poi.glutenFree === 'only') && (
+                <Chip tone="green">{t(`food.gluten.${poi.glutenFree}`)}</Chip>
+              )}
               {poi.cuisine?.slice(0, 2).map((c) => (
                 <Chip key={c}>{c}</Chip>
               ))}

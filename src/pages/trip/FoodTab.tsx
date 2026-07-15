@@ -17,31 +17,46 @@ export function FoodTab() {
   const settings = useSettings();
   const { trip, pois } = useTrip();
   const [kosherOnly, setKosherOnly] = useState(settings.kosherOnly);
+  const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>('distance');
   const [mode, setMode] = useState<RadiusMode>('time');
   const [value, setValue] = useState(TIME_MIN);
 
   const curated = useMemo(() => (pois ?? []).filter((p) => p.category === 'restaurant'), [pois]);
   const base = { lat: trip!.params.lat, lon: trip!.params.lon };
+  // Diet filters live in OSM tags, so pull live data even in-area when one is on.
+  const dietFilter = kosherOnly || glutenFreeOnly;
   const { items, loading, error } = useRadiusPois({
     base,
     categories: ['restaurant'],
     curated,
     mode,
     value,
-    cityOnly: isCityOnly(mode, value),
+    cityOnly: isCityOnly(mode, value) && !dietFilter,
   });
 
   const restaurants = useMemo(() => {
     let list = items;
     if (kosherOnly) list = list.filter((r) => r.poi.kosher === 'yes' || r.poi.kosher === 'only');
+    if (glutenFreeOnly) list = list.filter((r) => r.poi.glutenFree === 'yes' || r.poi.glutenFree === 'only');
     return [...list].sort((a, b) => {
       if (sort === 'distance') return a.straightKm - b.straightKm;
       if (sort === 'rating') return (b.poi.rating ?? 0) - (a.poi.rating ?? 0);
       if (sort === 'popularity') return (b.poi.popularity ?? 0) - (a.poi.popularity ?? 0);
       return (a.poi.priceLevel ?? 5) - (b.poi.priceLevel ?? 5);
     });
-  }, [items, kosherOnly, sort]);
+  }, [items, kosherOnly, glutenFreeOnly, sort]);
+
+  const emptyTitle = glutenFreeOnly
+    ? t('food.glutenEmpty.title')
+    : kosherOnly
+      ? t('food.kosherEmpty.title')
+      : t('errors.poisLimited');
+  const emptyDesc = glutenFreeOnly
+    ? t('food.glutenEmpty.desc')
+    : kosherOnly
+      ? t('food.kosherEmpty.desc')
+      : undefined;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -49,11 +64,17 @@ export function FoodTab() {
 
       <DistanceFilterBar mode={mode} value={value} onMode={setMode} onValue={setValue} loading={loading} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="flex items-center gap-2.5 text-sm font-medium">
-          <Toggle checked={kosherOnly} onChange={setKosherOnly} label={t('food.kosherOnly')} />
-          {t('food.kosherOnly')}
-        </label>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <label className="flex items-center gap-2.5 text-sm font-medium">
+            <Toggle checked={kosherOnly} onChange={setKosherOnly} label={t('food.kosherOnly')} />
+            {t('food.kosherOnly')}
+          </label>
+          <label className="flex items-center gap-2.5 text-sm font-medium">
+            <Toggle checked={glutenFreeOnly} onChange={setGlutenFreeOnly} label={t('food.glutenFreeOnly')} />
+            {t('food.glutenFreeOnly')}
+          </label>
+        </div>
         <SegmentedControl<SortKey>
           value={sort}
           onChange={setSort}
@@ -68,11 +89,7 @@ export function FoodTab() {
       {error && <p className="text-xs text-amber-600 dark:text-amber-400">{t('filter.error')}</p>}
 
       {restaurants.length === 0 ? (
-        <EmptyState
-          icon={<UtensilsCrossed />}
-          title={kosherOnly ? t('food.kosherEmpty.title') : t('errors.poisLimited')}
-          description={kosherOnly ? t('food.kosherEmpty.desc') : undefined}
-        />
+        <EmptyState icon={<UtensilsCrossed />} title={emptyTitle} description={emptyDesc} />
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {restaurants.map((r) => (

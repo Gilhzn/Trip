@@ -57,6 +57,18 @@ export function overpassElementToPoi(el: OverpassElement, category: Poi['categor
           : ('unknown' as const)
       : undefined;
 
+  const glutenTag = tags['diet:gluten_free'];
+  const glutenFree =
+    category === 'restaurant'
+      ? glutenTag === 'only'
+        ? ('only' as const)
+        : glutenTag === 'yes' || glutenTag === 'limited'
+          ? ('yes' as const)
+          : glutenTag === 'no'
+            ? ('no' as const)
+            : ('unknown' as const)
+      : undefined;
+
   const indoorOutdoor: Poi['indoorOutdoor'] =
     category === 'attraction'
       ? ['museum', 'gallery', 'aquarium'].includes(tags.tourism ?? '')
@@ -77,6 +89,7 @@ export function overpassElementToPoi(el: OverpassElement, category: Poi['categor
     lon,
     popularity: notable,
     kosher,
+    glutenFree,
     cuisine: category === 'restaurant' && tags.cuisine ? tags.cuisine.split(';').map((c) => c.trim()) : undefined,
     indoorOutdoor,
     visitDurationMin: category === 'attraction' ? 90 : undefined,

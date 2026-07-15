@@ -2,6 +2,7 @@ export type PoiCategory = 'attraction' | 'restaurant' | 'hotel' | 'parking' | 'r
 export type PriceLevelValue = 1 | 2 | 3 | 4; // €..€€€€
 export type IndoorOutdoor = 'indoor' | 'outdoor' | 'mixed';
 export type KosherStatus = 'yes' | 'only' | 'no' | 'unknown';
+export type DietStatus = 'yes' | 'only' | 'no' | 'unknown';
 
 export interface Bilingual {
   he: string;
@@ -27,6 +28,8 @@ export interface Poi {
   pricePerNightEur?: number;
   /** restaurants only */
   kosher?: KosherStatus;
+  /** restaurants: gluten-free availability (from OSM diet:gluten_free where known) */
+  glutenFree?: DietStatus;
   cuisine?: string[];
   indoorOutdoor?: IndoorOutdoor;
   /** typical visit length, minutes */
