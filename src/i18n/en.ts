@@ -138,6 +138,10 @@ export const en: Record<TranslationKey, string> = {
   'itinerary.freeDayNote': 'Free day — day-trip ideas nearby',
   'itinerary.emptyDay': 'Open day for exploring on your own',
   'itinerary.visitDuration': '~{n} min visit',
+  'itinerary.density.label': 'Content per day',
+  'itinerary.density.few': 'Fewer',
+  'itinerary.density.many': 'More',
+  'itinerary.density.perDay': '{n} activities/day',
 
   // Weather
   'weather.title': 'Weather',

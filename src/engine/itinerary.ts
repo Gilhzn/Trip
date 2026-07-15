@@ -21,7 +21,12 @@ interface GenerateInput {
   kosherOnly: boolean;
   /** day-trip / local tips used to enrich free days on long trips */
   localTips?: Bilingual[];
+  /** override attractions-per-full-day (the density slider); defaults to the party pace */
+  activitiesPerDay?: number;
 }
+
+export const MIN_ACTIVITIES_PER_DAY = 2;
+export const MAX_ACTIVITIES_PER_DAY = 6;
 
 function weekdayOf(date: string): number {
   return new Date(date + 'T12:00:00Z').getUTCDay();
@@ -100,11 +105,15 @@ function pickMeal(
  * anchored greedily, clustered geographically, and paced by the party profile.
  */
 export function generateItinerary(input: GenerateInput): DayPlan[] {
-  const { params, pois, weather, kosherOnly, localTips = [] } = input;
+  const { params, pois, weather, kosherOnly, localTips = [], activitiesPerDay } = input;
   const dates = listDates(params.startDate, params.endDate);
   const party: PartyProfile = buildPartyProfile(
     params.travelers.length > 0 ? params.travelers.map((t) => t.age) : [30],
   );
+  const baseBudget =
+    activitiesPerDay !== undefined
+      ? Math.max(MIN_ACTIVITIES_PER_DAY, Math.min(MAX_ACTIVITIES_PER_DAY, Math.round(activitiesPerDay)))
+      : party.slotBudget;
 
   const attractions = pois.filter((p) => p.category === 'attraction');
   const restaurants = pois.filter((p) => p.category === 'restaurant');
@@ -134,8 +143,9 @@ export function generateItinerary(input: GenerateInput): DayPlan[] {
     const isLastDay = dayIndex === dates.length - 1;
     const lightDay = isFirstDay || isLastDay;
 
-    const slotBudget = lightDay ? Math.min(2, party.slotBudget) : party.slotBudget;
-    const minuteBudget = lightDay ? LIGHT_DAY_VISIT_MINUTES : MAX_DAY_VISIT_MINUTES;
+    const slotBudget = lightDay ? Math.min(2, baseBudget) : baseBudget;
+    // Scale the time budget with density so a "lots of content" day actually fits more.
+    const minuteBudget = lightDay ? LIGHT_DAY_VISIT_MINUTES : Math.max(MAX_DAY_VISIT_MINUTES, baseBudget * 130);
     const fullDay = !lightDay;
 
     const candidates = attractions.filter((p) => !usedAttractions.has(p.id) && isOpenOn(p, weekday));
