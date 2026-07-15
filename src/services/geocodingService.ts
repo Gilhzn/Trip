@@ -29,6 +29,46 @@ interface GeocodingResponse {
   }[];
 }
 
+export interface ReverseGeo {
+  name: string;
+  countryCode: string;
+  timezone: string;
+  lat: number;
+  lon: number;
+}
+
+interface NominatimReverse {
+  name?: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    municipality?: string;
+    county?: string;
+    state?: string;
+    country_code?: string;
+  };
+}
+
+/** Reverse-geocode GPS coords to a city name + country (for current-location trips). */
+export async function reverseGeocode(lat: number, lon: number, lang: 'he' | 'en'): Promise<ReverseGeo> {
+  const key = `revgeo:${lang}:${lat.toFixed(3)}:${lon.toFixed(3)}`;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'auto';
+  return cached(key, TTL.geocoding, async () => {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10&accept-language=${lang}`;
+    const data = await fetchJson<NominatimReverse>(url);
+    const a = data.address ?? {};
+    const name = a.city || a.town || a.village || a.municipality || a.county || a.state || data.name || '';
+    return {
+      name,
+      countryCode: (a.country_code ?? '').toUpperCase(),
+      timezone,
+      lat,
+      lon,
+    };
+  });
+}
+
 export async function searchCities(query: string, lang: 'he' | 'en'): Promise<GeoResult[]> {
   const q = query.trim();
   if (q.length < 2) return [];

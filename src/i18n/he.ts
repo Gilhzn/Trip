@@ -71,6 +71,10 @@ export const he = {
   'wizard.step.dates': 'תאריכים',
   'wizard.step.party': 'מטיילים',
   'wizard.destination.label': 'לאן נוסעים?',
+  'wizard.planBy.destination': 'לפי יעד',
+  'wizard.planBy.location': 'לפי המיקום שלי',
+  'wizard.location.detect': 'זיהוי המיקום הנוכחי',
+  'wizard.location.detecting': 'מזהה מיקום...',
   'wizard.destination.placeholder': 'חיפוש עיר, למשל זלצבורג...',
   'wizard.destination.curatedBadge': 'מדריך מלא',
   'wizard.destination.noResults': 'לא נמצאו תוצאות. נסו שם אחר או באנגלית',
@@ -163,6 +167,7 @@ export const he = {
   'food.kosher.unknown': 'כשרות לא ידועה',
   'food.kosherEmpty.title': 'לא נמצאו מסעדות כשרות',
   'food.kosherEmpty.desc': 'לא איתרנו מסעדות כשרות מתועדות ביעד זה. שווה לבדוק עם הקהילה היהודית המקומית או לשקול אירוח עצמי',
+  'food.sort.distance': 'מרחק',
   'food.sort.rating': 'דירוג',
   'food.sort.popularity': 'פופולריות',
   'food.sort.price': 'מחיר',
@@ -258,6 +263,12 @@ export const he = {
   'explore.error': 'לא הצלחנו לטעון תוצאות כרגע — שירות המפות עמוס. נסו שוב עוד רגע',
   'explore.idle': 'בחרו מרחק וקטגוריות ולחצו על "הצגת תוצאות"',
   'explore.dataSource': 'הנתונים מ־OpenStreetMap · זמני הנסיעה משוערים',
+
+  // Distance filter bar
+  'filter.travelFromBase': 'מרחק נסיעה מהיעד',
+  'filter.inArea': 'באזור היעד',
+  'filter.showingFar': 'כולל {n} מקומות רחוקים יותר',
+  'filter.error': 'לא ניתן לטעון מקומות רחוקים כרגע',
 
   // Saved trips
   'saved.title': 'הטיולים שלי',

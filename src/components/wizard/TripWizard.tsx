@@ -1,22 +1,28 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Loader2, Minus, Plus, Sparkles, Users } from 'lucide-react';
+import { CalendarDays, LocateFixed, Loader2, MapPin, Minus, Plus, Sparkles, Users } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nContext';
 import { useSettings, type OriginCountry } from '@/state/SettingsContext';
 import { useTrips } from '@/state/TripContext';
 import { generateTrip, type GenerationStage } from '@/services/tripGenerator';
 import { listDates } from '@/services/weatherService';
+import { reverseGeocode } from '@/services/geocodingService';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { DestinationSearch, metaToChoice, type DestinationChoice } from './DestinationSearch';
 import { DESTINATIONS } from '@/data/destinations';
 import { useLocalized } from '@/i18n/I18nContext';
 import type { Traveler, TravelerGender } from '@/types/trip';
+import type { TranslationKey } from '@/i18n/he';
 
 const MAX_TRIP_DAYS = 21;
 const MAX_TRAVELERS = 10;
 const ORIGIN_OPTIONS: OriginCountry[] = ['IL', 'US', 'UK', 'other'];
 const GENDER_OPTIONS: TravelerGender[] = ['male', 'female'];
+
+type PlanMode = 'destination' | 'location';
+type LocStatus = 'idle' | 'locating' | 'denied' | 'error' | 'unsupported';
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -35,6 +41,8 @@ export function TripWizard() {
   const { saveTrip } = useTrips();
   const navigate = useNavigate();
 
+  const [planMode, setPlanMode] = useState<PlanMode>('destination');
+  const [locStatus, setLocStatus] = useState<LocStatus>('idle');
   const [destination, setDestination] = useState<DestinationChoice | undefined>();
   const [startDate, setStartDate] = useState(() => plusDays(todayIso(), 7));
   const [endDate, setEndDate] = useState(() => plusDays(todayIso(), 12));
@@ -55,6 +63,47 @@ export function TripWizard() {
     setTravelers((prev) =>
       prev.map((t, i) => (i === index ? { ...t, gender: t.gender === gender ? undefined : gender } : t)),
     );
+  };
+
+  const detectLocation = () => {
+    if (!('geolocation' in navigator)) {
+      setLocStatus('unsupported');
+      return;
+    }
+    setLocStatus('locating');
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lon } = pos.coords;
+        try {
+          const geo = await reverseGeocode(lat, lon, lang);
+          setDestination({
+            name: geo.name || t('explore.center.myLocation'),
+            countryCode: geo.countryCode || undefined,
+            lat,
+            lon,
+            timezone: geo.timezone,
+          });
+          setLocStatus('idle');
+        } catch {
+          // Reverse geocode failed — still usable with coords + browser timezone.
+          setDestination({
+            name: t('explore.center.myLocation'),
+            lat,
+            lon,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'auto',
+          });
+          setLocStatus('idle');
+        }
+      },
+      (err) => setLocStatus(err.code === err.PERMISSION_DENIED ? 'denied' : 'error'),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+    );
+  };
+
+  const switchMode = (mode: PlanMode) => {
+    setPlanMode(mode);
+    setDestination(undefined);
+    setLocStatus('idle');
   };
 
   const generate = async () => {
@@ -109,23 +158,61 @@ export function TripWizard() {
             <Sparkles className="size-4 text-primary-600" />
             {t('wizard.destination.label')}
           </label>
-          <DestinationSearch value={destination} onSelect={setDestination} />
-          <div className="mt-3 flex flex-wrap gap-2">
-            {DESTINATIONS.map((meta) => (
-              <button
-                key={meta.slug}
-                onClick={() => setDestination(metaToChoice(meta, lang))}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors ${
-                  destination?.slug === meta.slug
-                    ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300'
-                    : 'border-zinc-200 text-zinc-600 hover:border-primary-300 hover:text-primary-700 dark:border-zinc-700 dark:text-zinc-300'
-                }`}
+
+          <SegmentedControl<PlanMode>
+            className="mb-3 w-full [&>button]:flex-1"
+            value={planMode}
+            onChange={switchMode}
+            options={[
+              { value: 'destination', label: t('wizard.planBy.destination') },
+              { value: 'location', label: t('wizard.planBy.location') },
+            ]}
+          />
+
+          {planMode === 'destination' ? (
+            <>
+              <DestinationSearch value={destination} onSelect={setDestination} />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {DESTINATIONS.map((meta) => (
+                  <button
+                    key={meta.slug}
+                    onClick={() => setDestination(metaToChoice(meta, lang))}
+                    className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors ${
+                      destination?.slug === meta.slug
+                        ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300'
+                        : 'border-zinc-200 text-zinc-600 hover:border-primary-300 hover:text-primary-700 dark:border-zinc-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    <span>{meta.emoji}</span>
+                    {localized(meta.name)}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div>
+              <Button
+                variant={destination ? 'secondary' : 'primary'}
+                className="w-full"
+                disabled={locStatus === 'locating'}
+                onClick={detectLocation}
               >
-                <span>{meta.emoji}</span>
-                {localized(meta.name)}
-              </button>
-            ))}
-          </div>
+                {locStatus === 'locating' ? <Loader2 className="size-5 animate-spin" /> : <LocateFixed className="size-5" />}
+                {locStatus === 'locating' ? t('wizard.location.detecting') : t('wizard.location.detect')}
+              </Button>
+              {destination && planMode === 'location' && (
+                <div className="mt-2 flex items-center gap-2 rounded-xl bg-primary-50 px-3.5 py-2.5 text-sm font-medium text-primary-700 dark:bg-primary-950 dark:text-primary-300">
+                  <MapPin className="size-4 shrink-0" />
+                  {destination.name}
+                </div>
+              )}
+              {(locStatus === 'denied' || locStatus === 'error' || locStatus === 'unsupported') && (
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                  {t(`explore.location${locStatus === 'denied' ? 'Denied' : locStatus === 'unsupported' ? 'Unsupported' : 'Error'}` as TranslationKey)}
+                </p>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Dates */}

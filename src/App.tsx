@@ -1,5 +1,7 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
+import { RouteError } from '@/components/RouteError';
 import { I18nProvider } from '@/i18n/I18nContext';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { TripProvider } from '@/state/TripContext';
@@ -19,11 +21,12 @@ import { ExploreTab } from '@/pages/trip/ExploreTab';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 
 // Leaflet is heavy — load the map chunk only when the map tab opens.
-const MapTab = lazy(() => import('@/pages/trip/MapTab').then((m) => ({ default: m.MapTab })));
+const MapTab = lazyWithRetry(() => import('@/pages/trip/MapTab').then((m) => ({ default: m.MapTab })));
 
 const router = createHashRouter([
   {
     element: <AppShell />,
+    errorElement: <RouteError />,
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/trips', element: <SavedTripsPage /> },

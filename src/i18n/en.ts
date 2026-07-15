@@ -73,6 +73,10 @@ export const en: Record<TranslationKey, string> = {
   'wizard.step.dates': 'Dates',
   'wizard.step.party': 'Travelers',
   'wizard.destination.label': 'Where to?',
+  'wizard.planBy.destination': 'By destination',
+  'wizard.planBy.location': 'By my location',
+  'wizard.location.detect': 'Detect current location',
+  'wizard.location.detecting': 'Locating...',
   'wizard.destination.placeholder': 'Search a city, e.g. Salzburg...',
   'wizard.destination.curatedBadge': 'Full guide',
   'wizard.destination.noResults': 'No results found. Try a different spelling',
@@ -165,6 +169,7 @@ export const en: Record<TranslationKey, string> = {
   'food.kosher.unknown': 'Kosher status unknown',
   'food.kosherEmpty.title': 'No kosher restaurants found',
   'food.kosherEmpty.desc': 'We could not find documented kosher restaurants at this destination. Consider checking with the local Jewish community or self-catering',
+  'food.sort.distance': 'Distance',
   'food.sort.rating': 'Rating',
   'food.sort.popularity': 'Popularity',
   'food.sort.price': 'Price',
@@ -260,6 +265,12 @@ export const en: Record<TranslationKey, string> = {
   'explore.error': "We couldn't load results right now — the map service is busy. Try again in a moment",
   'explore.idle': 'Pick a distance and categories, then tap "Show results"',
   'explore.dataSource': 'Data from OpenStreetMap · drive times are estimates',
+
+  // Distance filter bar
+  'filter.travelFromBase': 'Travel from destination',
+  'filter.inArea': 'Around destination',
+  'filter.showingFar': 'incl. {n} farther places',
+  'filter.error': "Couldn't load farther places right now",
 
   // Saved trips
   'saved.title': 'My trips',
