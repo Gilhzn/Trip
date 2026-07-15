@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { UtensilsCrossed } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nContext';
-import { useSettings } from '@/state/SettingsContext';
 import { useTrip } from '@/pages/TripPage';
 import { PoiCard } from '@/components/poi/PoiCard';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
@@ -14,9 +13,9 @@ type SortKey = 'distance' | 'rating' | 'popularity' | 'price';
 
 export function FoodTab() {
   const { t } = useI18n();
-  const settings = useSettings();
   const { trip, pois } = useTrip();
-  const [kosherOnly, setKosherOnly] = useState(settings.kosherOnly);
+  // Diet filters always start off — the traveler opts in per visit.
+  const [kosherOnly, setKosherOnly] = useState(false);
   const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>('distance');
   const [mode, setMode] = useState<RadiusMode>('time');
